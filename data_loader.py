@@ -58,8 +58,8 @@ class TSFDataLoader(Dataset):
             test_end = n
         
         train_df = df[:train_end]
-        val_df = df[train_end - self.seq_len:val_end]
-        test_df = df[val_end - self.seq_len:test_end]
+        val_df = df[train_end:val_end]
+        test_df = df[val_end:test_end]
         
         # Standardize by training set
         self.scaler = StandardScaler()

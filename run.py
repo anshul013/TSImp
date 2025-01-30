@@ -152,7 +152,8 @@ def main():
     
     end_time = time.time()
     print(f"Training completed in {end_time - start_time:.2f} seconds")
-    
+    print(f"Train samples: {len(train_data.dataset)}, Val samples: {len(val_data.dataset)}, Test samples: {len(test_data.dataset)}")
+
     # Load best model and evaluate on test set
     model.load_state_dict(torch.load(os.path.join(args.checkpoint_dir, f'{exp_id}_best.pth')))
     model.eval()
