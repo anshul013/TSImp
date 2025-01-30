@@ -17,5 +17,5 @@
 
 import models.cnn
 import models.full_linear
-import models.tsmixer
-import models.tsmixer_rev_in
+from models.tsmixer import TSMixer
+from models.tsmixer_rev_in import TSMixerRevNorm
