@@ -4,7 +4,7 @@ import torch.nn as nn
 class RevNorm(nn.Module):
     """Reversible Instance Normalization in PyTorch."""
     
-    def __init__(self, axis, eps=1e-5, affine=True):
+    def __init__(self, axis, eps=1e-5, affine=True, num_features=None):
         super().__init__()
         self.axis = axis
         self.eps = eps
@@ -12,10 +12,11 @@ class RevNorm(nn.Module):
         self.mean = None
         self.stdev = None
         
-    def build(self, input_shape):
         if self.affine:
-            self.affine_weight = nn.Parameter(torch.ones(input_shape[-1]))
-            self.affine_bias = nn.Parameter(torch.zeros(input_shape[-1]))
+            if num_features is None:
+                raise ValueError("num_features must be provided when affine=True")
+            self.affine_weight = nn.Parameter(torch.ones(num_features))
+            self.affine_bias = nn.Parameter(torch.zeros(num_features))
     
     def forward(self, x, mode, target_slice=None):
         if mode == 'norm':
