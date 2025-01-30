@@ -22,20 +22,28 @@ import torch.nn as nn
 class RevNorm(nn.Module):
   """Reversible Instance Normalization."""
 
-  def __init__(self, axis=-2, eps=1e-5, affine=True):
+  def __init__(self, num_features=None, axis=-2, eps=1e-5, affine=True):
     super().__init__()
     self.axis = axis
     self.eps = eps
     self.affine = affine
     self.mean = None
     self.stdev = None
-
-  def build(self, input_shape):
+    
+    # Initialize affine parameters if needed
     if self.affine:
-      self.affine_weight = nn.Parameter(torch.ones(input_shape[-1]))
-      self.affine_bias = nn.Parameter(torch.zeros(input_shape[-1]))
+      if num_features is None:
+        raise ValueError("num_features must be provided when affine=True")
+      self.affine_weight = nn.Parameter(torch.ones(num_features))
+      self.affine_bias = nn.Parameter(torch.zeros(num_features))
 
   def forward(self, x, mode, target_slice=None):
+    # Initialize parameters on first forward pass if not done in __init__
+    if self.affine and not hasattr(self, 'affine_weight'):
+      num_features = x.size(-1)
+      self.affine_weight = nn.Parameter(torch.ones(num_features))
+      self.affine_bias = nn.Parameter(torch.zeros(num_features))
+      
     if mode == 'norm':
       self._get_statistics(x)
       x = self._normalize(x)
