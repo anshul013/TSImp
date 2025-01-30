@@ -32,7 +32,7 @@ class ResidualBlock(nn.Module):
         if self.norm_type == 'L':
             x_norm = self.norm1(x)
         else:
-            x_norm = self.norm1(x.transpose(1, 2)).transpose(1, 2)
+            x_norm = self.norm1(x)
         print("x_norm shape before transpose: ", x_norm.shape)
         print("x_norm shape after transpose: ", x_norm.transpose(1, 2).shape)
         print("Expected input for self.temporal_fc:", self.temporal_fc.in_features)
