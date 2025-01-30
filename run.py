@@ -65,6 +65,8 @@ def main():
     exp_id = f"{args.data}_{args.feature_type}_{args.model}_sl{args.seq_len}_pl{args.pred_len}_lr{args.learning_rate}" \
              f"_nt{args.norm_type}_{args.activation}_nb{args.n_block}_dp{args.dropout}_fd{args.ff_dim}"
     
+    os.makedirs(args.checkpoint_dir, exist_ok=True)
+
     # Load datasets
     data_loader = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.target)
     train_data = DataLoader(data_loader, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
