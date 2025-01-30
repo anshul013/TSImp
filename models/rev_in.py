@@ -39,7 +39,13 @@ class RevNorm(nn.Module):
         return x
     
     def _denormalize(self, x, target_slice=None):
-        if self.affine:
-            x = (x - self.affine_bias[target_slice]) / self.affine_weight[target_slice]
-        x = x * self.stdev[:, :, target_slice] + self.mean[:, :, target_slice]
-        return x
+      if self.affine:
+        x = (x - self.affine_bias[target_slice]) / self.affine_weight[target_slice]
+    
+      # Ensure stdev and mean are properly shaped
+      stdev_resized = self.stdev[:, :x.shape[1], target_slice]
+      mean_resized = self.mean[:, :x.shape[1], target_slice]
+
+      x = x * stdev_resized + mean_resized
+      return x
+
