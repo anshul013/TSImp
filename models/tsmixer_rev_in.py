@@ -9,7 +9,7 @@ class TSMixerRevNorm(nn.Module):
     def __init__(self, input_shape, pred_len, norm_type, activation, n_block, dropout, ff_dim, target_slice=None):
         super().__init__()
         self.input_dim = input_shape[-1]
-        self.seq_len = input_shape[1]
+        self.seq_len = input_shape[-2]
         self.pred_len = pred_len
         self.target_slice = target_slice
         

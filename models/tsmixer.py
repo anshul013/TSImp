@@ -33,7 +33,9 @@ class ResidualBlock(nn.Module):
             x_norm = self.norm1(x)
         else:
             x_norm = self.norm1(x.transpose(1, 2)).transpose(1, 2)
-        
+        print("x_norm shape before transpose: ", x_norm.shape)
+        print("x_norm shape after transpose: ", x_norm.transpose(1, 2).shape)
+        print("Expected input for self.temporal_fc:", self.temporal_fc.in_features)
         x_t = self.temporal_fc(x_norm.transpose(1, 2)).transpose(1, 2)
         if self.activation:
             x_t = self.activation(x_t)
