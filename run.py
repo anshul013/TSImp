@@ -65,67 +65,67 @@ def main():
     exp_id = f"{args.data}_{args.feature_type}_{args.model}_sl{args.seq_len}_pl{args.pred_len}_lr{args.learning_rate}" \
              f"_nt{args.norm_type}_{args.activation}_nb{args.n_block}_dp{args.dropout}_fd{args.ff_dim}"
     
-    # Create checkpoint directory if it doesn't exist
-    os.makedirs(args.checkpoint_dir, exist_ok=True)
-    
-    # Set up device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f'Using device: {device}')
-    
     # Load datasets
     data_loader = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.target)
     train_data = DataLoader(data_loader, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
+    val_data = DataLoader(data_loader, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)  # Add validation loader
+    test_data = DataLoader(data_loader, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
     
     # Model selection
     model_class = {
         "tsmixer": models.tsmixer.TSMixer,
         "tsmixer_rev_in": models.tsmixer_rev_in.TSMixerRevNorm
     }.get(args.model, None)
-    
     if model_class is None:
         raise ValueError(f'Unknown model type: {args.model}')
     
-    model = model_class(
-        input_shape=(args.seq_len, data_loader.n_feature),
-        pred_len=args.pred_len,
-        norm_type=args.norm_type,
-        activation=args.activation,
-        dropout=args.dropout,
-        n_block=args.n_block,
-        ff_dim=args.ff_dim,
-        target_slice=data_loader.target_slice
-    ).to(device)  # Move model to GPU
+    model = model_class(input_shape=(args.seq_len, data_loader.n_feature), pred_len=args.pred_len,
+                         norm_type=args.norm_type, activation=args.activation, dropout=args.dropout,
+                         n_block=args.n_block, ff_dim=args.ff_dim, target_slice=data_loader.target_slice)
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
     
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     loss_fn = nn.MSELoss()
     
-    best_loss = float('inf')
+    best_val_loss = float('inf')
     patience_counter = 0
     
-    # Training loop
+    # Training loop with validation
     for epoch in range(args.train_epochs):
+        print(f"Epoch {epoch + 1}/{args.train_epochs}")
         model.train()
-        epoch_loss = 0
+        train_loss = 0
+        
         for inputs, labels in train_data:
-            # Move data to GPU
-            inputs = inputs.to(device)
-            labels = labels.to(device)
-            
+            inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = loss_fn(outputs, labels)
             loss.backward()
             optimizer.step()
-            epoch_loss += loss.item()
+            train_loss += loss.item()
         
-        epoch_loss /= len(train_data)
-        print(f'Epoch {epoch + 1}/{args.train_epochs}, Loss: {epoch_loss}')
+        train_loss /= len(train_data)
         
-        # Early stopping
-        if epoch_loss < best_loss:
-            best_loss = epoch_loss
+        # Validation
+        model.eval()
+        val_loss = 0
+        with torch.no_grad():
+            for inputs, labels in val_data:
+                inputs, labels = inputs.to(device), labels.to(device)
+                outputs = model(inputs)
+                loss = loss_fn(outputs, labels)
+                val_loss += loss.item()
+        
+        val_loss /= len(val_data)
+        print(f'Epoch {epoch + 1}/{args.train_epochs}, Train Loss: {train_loss}, Val Loss: {val_loss}')
+        
+        # Early stopping based on validation loss
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
             patience_counter = 0
-            # Save model
             torch.save(model.state_dict(), os.path.join(args.checkpoint_dir, f'{exp_id}_best.pth'))
         else:
             patience_counter += 1
@@ -133,17 +133,33 @@ def main():
                 print('Early stopping triggered.')
                 break
     
-    # Evaluate best model
+    # Load best model and evaluate on test set
     model.load_state_dict(torch.load(os.path.join(args.checkpoint_dir, f'{exp_id}_best.pth')))
     model.eval()
+    print("Best model loaded for final evaluation.")
+
+    # Test evaluation
+    test_loss = 0
+    with torch.no_grad():
+        for inputs, labels in test_data:
+            inputs, labels = inputs.to(device), labels.to(device)
+            outputs = model(inputs)
+            loss = loss_fn(outputs, labels)
+            test_loss += loss.item()
+
+    test_loss /= len(test_data)
+    print(f"Final Test Loss: {test_loss}")
     
     # Save results
     results = {
         'data': args.data, 'model': args.model, 'seq_len': args.seq_len, 'pred_len': args.pred_len,
-        'lr': args.learning_rate, 'best_loss': best_loss, 'train_epochs': epoch + 1
+        'lr': args.learning_rate, 'best_val_loss': best_val_loss, 'train_epochs': epoch + 1,
+        'test_loss': test_loss
     }
     df = pd.DataFrame([results])
     df.to_csv(args.result_path, mode='a', index=False, header=not os.path.exists(args.result_path))
 
 if __name__ == '__main__':
     main()
+
+
