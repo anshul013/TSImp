@@ -69,9 +69,9 @@ def main():
 
     # Load datasets
     data_loader = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.target)
-    train_data = DataLoader(data_loader, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-    val_data = DataLoader(data_loader, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)  # Add validation loader
-    test_data = DataLoader(data_loader, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
+    train_data = data_loader.get_train()
+    val_data = data_loader.get_val()  # Add validation loader
+    test_data = data_loader.get_test()
     
     # Model selection
     model_class = {
@@ -94,6 +94,7 @@ def main():
     best_val_loss = float('inf')
     patience_counter = 0
     
+    start_time = time.time()
     # Training loop with validation
     for epoch in range(args.train_epochs):
         print(f"Epoch {epoch + 1}/{args.train_epochs}")
@@ -126,14 +127,19 @@ def main():
         
         # Early stopping based on validation loss
         if val_loss < best_val_loss:
+            prev_best_val_loss = best_val_loss
             best_val_loss = val_loss
             patience_counter = 0
+            print(f'Validation loss improved from {prev_best_val_loss} to {best_val_loss}')
             torch.save(model.state_dict(), os.path.join(args.checkpoint_dir, f'{exp_id}_best.pth'))
         else:
             patience_counter += 1
             if patience_counter >= args.patience:
-                print('Early stopping triggered.')
+                print(f'Early stopping triggered after {args.patience} epochs without improvement.')
                 break
+    
+    end_time = time.time()
+    print(f"Training completed in {end_time - start_time:.2f} seconds")
     
     # Load best model and evaluate on test set
     model.load_state_dict(torch.load(os.path.join(args.checkpoint_dir, f'{exp_id}_best.pth')))
@@ -156,7 +162,7 @@ def main():
     results = {
         'data': args.data, 'model': args.model, 'seq_len': args.seq_len, 'pred_len': args.pred_len,
         'lr': args.learning_rate, 'best_val_loss': best_val_loss, 'train_epochs': epoch + 1,
-        'test_loss': test_loss
+        'test_loss': test_loss, 'training_time': end_time - start_time
     }
     df = pd.DataFrame([results])
     df.to_csv(args.result_path, mode='a', index=False, header=not os.path.exists(args.result_path))

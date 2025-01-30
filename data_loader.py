@@ -91,5 +91,11 @@ class TSFDataLoader(Dataset):
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
     
-    def get_dataloader(self, batch_size, shuffle=True):
-        return DataLoader(self, batch_size=batch_size, shuffle=shuffle, drop_last=True)
+    def get_train(self, shuffle=True):
+        return DataLoader(self, batch_size=self.batch_size, shuffle=shuffle, drop_last=True)
+    
+    def get_val(self):
+        return DataLoader(self, batch_size=self.batch_size, shuffle=False, drop_last=True)
+    
+    def get_test(self):
+        return DataLoader(self, batch_size=self.batch_size, shuffle=False, drop_last=True)
