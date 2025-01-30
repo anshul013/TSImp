@@ -8,6 +8,7 @@ class TSMixerRevNorm(nn.Module):
     
     def __init__(self, input_shape, pred_len, norm_type, activation, n_block, dropout, ff_dim, target_slice=None):
         super().__init__()
+        print("input_shape: ", input_shape)
         self.input_dim = input_shape[-1]
         self.seq_len = input_shape[-2]
         self.pred_len = pred_len
@@ -22,7 +23,9 @@ class TSMixerRevNorm(nn.Module):
         self.output_fc = nn.Linear(self.seq_len, pred_len)
     
     def forward(self, x):
+        print("x shape before rev_norm: ", x.shape)
         x = self.rev_norm(x, mode='norm')
+        print("x shape after rev_norm: ", x.shape)
         for block in self.blocks:
             x = block(x)
         
