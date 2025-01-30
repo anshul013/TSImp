@@ -7,7 +7,7 @@ seq_len=512
 # pred_len 96
 echo "Running ETTh1 with prediction length: 96"
 python run.py \
-    --model TSMixerRevNorm \
+    --model tsmixer_rev_in \
     --data $data \
     --seq_len $seq_len \
     --pred_len 96 \
@@ -19,7 +19,7 @@ python run.py \
 # pred_len 192
 echo "Running ETTh1 with prediction length: 192"
 python run.py \
-    --model TSMixerRevNorm \
+    --model tsmixer_rev_in \
     --data $data \
     --seq_len $seq_len \
     --pred_len 192 \
@@ -31,7 +31,7 @@ python run.py \
 # pred_len 336
 echo "Running ETTh1 with prediction length: 336"
 python run.py \
-    --model TSMixerRevNorm \
+    --model tsmixer_rev_in \
     --data $data \
     --seq_len $seq_len \
     --pred_len 336 \
@@ -43,7 +43,7 @@ python run.py \
 # pred_len 720
 echo "Running ETTh1 with prediction length: 720"
 python run.py \
-    --model TSMixerRevNorm \
+    --model tsmixer_rev_in \
     --data $data \
     --seq_len $seq_len \
     --pred_len 720 \

@@ -5,7 +5,7 @@ import os
 import time
 
 from data_loader import TSFDataLoader
-from models import TSMixer, TSMixerRevNorm
+import models
 import numpy as np
 import pandas as pd
 import torch
@@ -71,8 +71,8 @@ def main():
     
     # Model selection
     model_class = {
-    "tsmixer": TSMixer,
-    "tsmixer_rev_in": TSMixerRevNorm
+    "tsmixer": models.tsmixer.TSMixer,
+    "tsmixer_rev_in": models.tsmixer_rev_in.TSMixerRevNorm
     }.get(args.model, None)
     if model_class is None:
         raise ValueError(f'Unknown model type: {args.model}')
