@@ -13,11 +13,12 @@ LOCAL_CACHE_DIR = './dataset/'
 class TSFDataLoader(Dataset):
     """Generate data loader from raw data."""
     
-    def __init__(self, data, seq_len, pred_len, feature_type, target='OT'):
+    def __init__(self, data, seq_len, pred_len, feature_type, batch_size, target='OT'):
         self.data = data
         self.seq_len = seq_len
         self.pred_len = pred_len
         self.feature_type = feature_type
+        self.batch_size = batch_size
         self.target = target
         self.target_slice = slice(0, None)
         

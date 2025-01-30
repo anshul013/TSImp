@@ -13,7 +13,7 @@ class TSMixerRevNorm(nn.Module):
         self.pred_len = pred_len
         self.target_slice = target_slice
         
-        self.rev_norm = RevNorm(axis=-2, num_features=self.input_dim)
+        self.rev_norm = RevNorm(axis=-1, num_features=self.input_dim)
         self.blocks = nn.ModuleList([
             ResidualBlock(input_dim=self.input_dim, 
                          seq_len=self.seq_len,
