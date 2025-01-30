@@ -5,7 +5,7 @@ import os
 import time
 
 from data_loader import TSFDataLoader
-import models
+from models import TSMixer, TSMixerRevNorm
 import numpy as np
 import pandas as pd
 import torch
@@ -70,7 +70,10 @@ def main():
     train_data = DataLoader(data_loader, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     
     # Model selection
-    model_class = getattr(models, args.model, None)
+    model_class = {
+    "tsmixer": TSMixer,
+    "tsmixer_rev_in": TSMixerRevNorm
+    }.get(args.model, None)
     if model_class is None:
         raise ValueError(f'Unknown model type: {args.model}')
     
