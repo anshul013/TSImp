@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class RevNorm(nn.Module):
     """Reversible Instance Normalization in PyTorch."""
@@ -47,10 +48,10 @@ class RevNorm(nn.Module):
       if self.affine:
         x = (x - self.affine_bias[target_slice]) / self.affine_weight[target_slice]
     
-      # Ensure stdev and mean are properly shaped
-      stdev_resized = self.stdev[:, :x.shape[1], target_slice]
-      mean_resized = self.mean[:, :x.shape[1], target_slice]
-
+      # Always resize self.stdev and self.mean to match x.shape[1] & (pred_len)
+      stdev_resized = F.interpolate(self.stdev.permute(0, 2, 1), size=x.shape[1], mode='nearest').permute(0, 2, 1)
+      mean_resized = F.interpolate(self.mean.permute(0, 2, 1), size=x.shape[1], mode='nearest').permute(0, 2, 1)
+      
       x = x * stdev_resized + mean_resized
       return x
 
