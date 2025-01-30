@@ -36,8 +36,8 @@ class TSMixerRevIn(nn.Module):
         seq_len, channels = input_shape
         self.target_slice = target_slice
         
-        # RevNorm layer
-        self.rev_norm = RevNorm(axis=-2)
+        # RevNorm layer - normalize across channel dimension (last dimension)
+        self.rev_norm = RevNorm(num_features=channels, axis=-1)
         
         # Stack multiple residual blocks
         self.blocks = nn.ModuleList([

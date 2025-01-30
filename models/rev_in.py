@@ -22,7 +22,7 @@ import torch.nn as nn
 class RevNorm(nn.Module):
   """Reversible Instance Normalization."""
 
-  def __init__(self, num_features=None, axis=-2, eps=1e-5, affine=True):
+  def __init__(self, num_features=None, axis=-1, eps=1e-5, affine=True):
     super().__init__()
     self.axis = axis
     self.eps = eps
