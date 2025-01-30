@@ -80,7 +80,7 @@ def main():
     os.makedirs(args.checkpoint_dir, exist_ok=True)
 
     # Load datasets
-    data_loader = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.target)
+    data_loader = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.batch_size, args.target)
     train_data = data_loader.get_train()
     val_data = data_loader.get_val()  # Add validation loader
     test_data = data_loader.get_test()
