@@ -82,7 +82,11 @@ class TSFDataLoader(Dataset):
         inputs = data[idx:idx + self.seq_len, :]
         labels = data[idx + self.seq_len:idx + self.seq_len + self.pred_len, self.target_slice]
         
-        return torch.tensor(inputs, dtype=torch.float32), torch.tensor(labels, dtype=torch.float32)
+        # Convert to tensors and ensure float32 dtype
+        inputs = torch.FloatTensor(inputs)
+        labels = torch.FloatTensor(labels)
+        
+        return inputs, labels
     
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)

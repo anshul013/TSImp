@@ -29,8 +29,13 @@ class RevNorm(nn.Module):
         return x
     
     def _get_statistics(self, x):
-        self.mean = x.mean(dim=self.axis, keepdim=True).detach()
-        self.stdev = (x.var(dim=self.axis, keepdim=True, unbiased=False) + self.eps).sqrt().detach()
+        # Calculate statistics along the sequence dimension (axis=-2)
+        self.mean = x.mean(dim=-2, keepdim=True).detach()
+        self.stdev = (x.var(dim=-2, keepdim=True, unbiased=False) + self.eps).sqrt().detach()
+        
+        # Ensure statistics are on the same device as input
+        self.mean = self.mean.to(x.device)
+        self.stdev = self.stdev.to(x.device)
     
     def _normalize(self, x):
         x = (x - self.mean) / self.stdev

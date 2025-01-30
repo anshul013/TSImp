@@ -65,21 +65,36 @@ def main():
     exp_id = f"{args.data}_{args.feature_type}_{args.model}_sl{args.seq_len}_pl{args.pred_len}_lr{args.learning_rate}" \
              f"_nt{args.norm_type}_{args.activation}_nb{args.n_block}_dp{args.dropout}_fd{args.ff_dim}"
     
+    # Create checkpoint directory if it doesn't exist
+    os.makedirs(args.checkpoint_dir, exist_ok=True)
+    
+    # Set up device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f'Using device: {device}')
+    
     # Load datasets
     data_loader = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.target)
     train_data = DataLoader(data_loader, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     
     # Model selection
     model_class = {
-    "tsmixer": models.tsmixer.TSMixer,
-    "tsmixer_rev_in": models.tsmixer_rev_in.TSMixerRevNorm
+        "tsmixer": models.tsmixer.TSMixer,
+        "tsmixer_rev_in": models.tsmixer_rev_in.TSMixerRevNorm
     }.get(args.model, None)
+    
     if model_class is None:
         raise ValueError(f'Unknown model type: {args.model}')
     
-    model = model_class(input_shape=(args.seq_len, data_loader.n_feature), pred_len=args.pred_len,
-                         norm_type=args.norm_type, activation=args.activation, dropout=args.dropout,
-                         n_block=args.n_block, ff_dim=args.ff_dim, target_slice=data_loader.target_slice)
+    model = model_class(
+        input_shape=(args.seq_len, data_loader.n_feature),
+        pred_len=args.pred_len,
+        norm_type=args.norm_type,
+        activation=args.activation,
+        dropout=args.dropout,
+        n_block=args.n_block,
+        ff_dim=args.ff_dim,
+        target_slice=data_loader.target_slice
+    ).to(device)  # Move model to GPU
     
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
     loss_fn = nn.MSELoss()
@@ -92,6 +107,10 @@ def main():
         model.train()
         epoch_loss = 0
         for inputs, labels in train_data:
+            # Move data to GPU
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            
             optimizer.zero_grad()
             outputs = model(inputs)
             loss = loss_fn(outputs, labels)
@@ -106,6 +125,7 @@ def main():
         if epoch_loss < best_loss:
             best_loss = epoch_loss
             patience_counter = 0
+            # Save model
             torch.save(model.state_dict(), os.path.join(args.checkpoint_dir, f'{exp_id}_best.pth'))
         else:
             patience_counter += 1

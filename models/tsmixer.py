@@ -28,14 +28,15 @@ class ResidualBlock(nn.Module):
         self.dropout3 = nn.Dropout(dropout)
     
     def forward(self, x):
+        # x shape: [batch_size, seq_len, input_dim]
+        # All operations will automatically use the same device as input x
+        
         # Temporal Mixing Block
         if self.norm_type == 'L':
             x_norm = self.norm1(x)
         else:
             x_norm = self.norm1(x)
-        # print("x_norm shape before transpose: ", x_norm.shape)
-        # print("x_norm shape after transpose: ", x_norm.transpose(1, 2).shape)
-        # print("Expected input for self.temporal_fc:", self.temporal_fc.in_features)
+        
         x_t = self.temporal_fc(x_norm.transpose(1, 2)).transpose(1, 2)
         if self.activation:
             x_t = self.activation(x_t)
