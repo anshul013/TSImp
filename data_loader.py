@@ -13,12 +13,13 @@ LOCAL_CACHE_DIR = './dataset/'
 class TSFDataLoader(Dataset):
     """Generate data loader from raw data."""
     
-    def __init__(self, data, seq_len, pred_len, feature_type, batch_size, target='OT'):
+    def __init__(self, data, seq_len, pred_len, feature_type, batch_size, dataset_type, target='OT'):
         self.data = data
         self.seq_len = seq_len
         self.pred_len = pred_len
         self.feature_type = feature_type
         self.batch_size = batch_size
+        self.dataset_type = dataset_type
         self.target = target
         self.target_slice = slice(0, None)
         
@@ -58,28 +59,33 @@ class TSFDataLoader(Dataset):
             val_end = n - int(n * 0.2)
             test_end = n
         
-        train_df = df[:train_end]
-        val_df = df[train_end - self.seq_len:val_end]
-        test_df = df[val_end - self.seq_len:test_end]
+        # ✅ Load only the dataset corresponding to `dataset_type`
+        if self.dataset_type == 'train':
+            self.df = df[:train_end]
+        elif self.dataset_type == 'val':
+            self.df = df[train_end:val_end]
+        elif self.dataset_type == 'test':
+            self.df = df[val_end:test_end]
+        else:
+            raise ValueError(f"Unknown dataset_type: {self.dataset_type}")
         
         # Standardize by training set
         self.scaler = StandardScaler()
-        self.scaler.fit(train_df.values)
+        self.scaler.fit(df[:train_end].values)  # ✅ Always fit on training set only
         
-        def scale_df(df, scaler):
-            data = scaler.transform(df.values)
-            return pd.DataFrame(data, index=df.index, columns=df.columns)
-        
-        self.train_df = scale_df(train_df, self.scaler)
-        self.val_df = scale_df(val_df, self.scaler)
-        self.test_df = scale_df(test_df, self.scaler)
-        self.n_feature = self.train_df.shape[-1]
+        # Scale the dataset
+        self.df = pd.DataFrame(self.scaler.transform(self.df.values), index=self.df.index, columns=self.df.columns)
+
+        self.n_feature = self.df.shape[-1]
         
     def __len__(self):
         return len(self.train_df) - (self.seq_len + self.pred_len) + 1
     
     def __getitem__(self, idx):
-        data = self.train_df.values
+        if idx >= len(self.df) - self.seq_len - self.pred_len:
+            raise IndexError(f"Index {idx} out of range for dataset of size {len(self.df)}")
+
+        data = self.df.values
         inputs = data[idx:idx + self.seq_len, :]
         labels = data[idx + self.seq_len:idx + self.seq_len + self.pred_len, self.target_slice]
         
@@ -91,15 +97,3 @@ class TSFDataLoader(Dataset):
     
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
-    
-    def get_train(self, shuffle=True):
-        print(f"Train DataLoader Samples: {len(self.train_df)}")
-        return DataLoader(self, batch_size=self.batch_size, shuffle=shuffle, drop_last=True)
-    
-    def get_val(self):
-        print(f"Validation DataLoader Samples: {len(self.val_df)}")
-        return DataLoader(self, batch_size=self.batch_size, shuffle=False, drop_last=True)
-    
-    def get_test(self):
-        print(f"Test DataLoader Samples: {len(self.test_df)}")
-        return DataLoader(self, batch_size=self.batch_size, shuffle=False, drop_last=True)

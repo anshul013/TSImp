@@ -79,11 +79,15 @@ def main():
     
     os.makedirs(args.checkpoint_dir, exist_ok=True)
 
-    # Load datasets
-    data_loader = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.batch_size, args.target)
-    train_data = data_loader.get_train()
-    val_data = data_loader.get_val()  # Add validation loader
-    test_data = data_loader.get_test()
+    # ✅ Create separate dataset instances
+    train_dataset = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.batch_size, dataset_type='train', target=args.target)
+    val_dataset = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.batch_size, dataset_type='val', target=args.target)
+    test_dataset = TSFDataLoader(args.data, args.seq_len, args.pred_len, args.feature_type, args.batch_size, dataset_type='test', target=args.target)
+
+    # ✅ Create DataLoaders for each dataset
+    train_data = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, drop_last=True)
+    val_data = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, drop_last=True)
+    test_data = DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False, drop_last=True)
     
     # Model selection
     model_class = {
@@ -93,9 +97,9 @@ def main():
     if model_class is None:
         raise ValueError(f'Unknown model type: {args.model}')
     
-    model = model_class(input_shape=(args.seq_len, data_loader.n_feature), pred_len=args.pred_len,
+    model = model_class(input_shape=(args.seq_len, train_dataset.n_feature), pred_len=args.pred_len,
                          norm_type=args.norm_type, activation=args.activation, dropout=args.dropout,
-                         n_block=args.n_block, ff_dim=args.ff_dim, target_slice=data_loader.target_slice)
+                         n_block=args.n_block, ff_dim=args.ff_dim, target_slice=train_dataset.target_slice)
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
