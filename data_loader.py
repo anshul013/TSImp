@@ -88,7 +88,7 @@ class TSFDataLoader(Dataset):
         if idx >= max_index:  # ✅ Prevent out-of-range indexing
             raise IndexError(f"[ERROR] Index {idx} out of range for dataset of size {len(self.df)}")
 
-        print(f"[DEBUG] Fetching index: {idx} of {max_index}")  # ✅ Debug index range
+        # print(f"[DEBUG] Fetching index: {idx} of {max_index}")  # ✅ Debug index range
 
         data = self.df.values
         inputs = data[idx:idx + self.seq_len, :]
