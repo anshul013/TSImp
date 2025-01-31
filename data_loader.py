@@ -59,8 +59,8 @@ class TSFDataLoader(Dataset):
             test_end = n
         
         train_df = df[:train_end]
-        val_df = df[train_end:val_end]
-        test_df = df[val_end:test_end]
+        val_df = df[train_end - self.seq_len:val_end]
+        test_df = df[val_end - self.seq_len:test_end]
         
         # Standardize by training set
         self.scaler = StandardScaler()
@@ -93,10 +93,13 @@ class TSFDataLoader(Dataset):
         return self.scaler.inverse_transform(data)
     
     def get_train(self, shuffle=True):
-        return DataLoader(self, batch_size=self.batch_size, shuffle=shuffle, drop_last=True)
+        print(f"Train DataLoader Samples: {len(self.train_df)}")
+        return DataLoader(self.train_df, batch_size=self.batch_size, shuffle=shuffle, drop_last=True)
     
     def get_val(self):
-        return DataLoader(self, batch_size=self.batch_size, shuffle=False, drop_last=True)
+        print(f"Validation DataLoader Samples: {len(self.val_df)}")
+        return DataLoader(self.val_df, batch_size=self.batch_size, shuffle=False, drop_last=True)
     
     def get_test(self):
-        return DataLoader(self, batch_size=self.batch_size, shuffle=False, drop_last=True)
+        print(f"Test DataLoader Samples: {len(self.test_df)}")
+        return DataLoader(self.test_df, batch_size=self.batch_size, shuffle=False, drop_last=True)
