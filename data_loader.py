@@ -80,7 +80,7 @@ class TSFDataLoader(Dataset):
         
     def __len__(self):
         dataset_length = len(self.df) - self.seq_len - self.pred_len
-        print(f"[DEBUG] Dataset Type: {self.dataset_type}, Dataset Length: {len(self.df)}, Computed Length: {dataset_length}")
+        # print(f"[DEBUG] Dataset Type: {self.dataset_type}, Dataset Length: {len(self.df)}, Computed Length: {dataset_length}")
         return max(1, dataset_length)
     
     def __getitem__(self, idx):
