@@ -79,7 +79,7 @@ class TSFDataLoader(Dataset):
         self.n_feature = self.df.shape[-1]
         
     def __len__(self):
-        return len(self.train_df) - (self.seq_len + self.pred_len) + 1
+        return len(self.df) - (self.seq_len + self.pred_len) + 1
     
     def __getitem__(self, idx):
         if idx >= len(self.df) - self.seq_len - self.pred_len:
