@@ -94,12 +94,12 @@ class TSFDataLoader(Dataset):
     
     def get_train(self, shuffle=True):
         print(f"Train DataLoader Samples: {len(self.train_df)}")
-        return DataLoader(self.train_df.values, batch_size=self.batch_size, shuffle=shuffle, drop_last=True)
+        return DataLoader(self, batch_size=self.batch_size, shuffle=shuffle, drop_last=True)
     
     def get_val(self):
         print(f"Validation DataLoader Samples: {len(self.val_df)}")
-        return DataLoader(self.val_df.values, batch_size=self.batch_size, shuffle=False, drop_last=True)
+        return DataLoader(self, batch_size=self.batch_size, shuffle=False, drop_last=True)
     
     def get_test(self):
         print(f"Test DataLoader Samples: {len(self.test_df)}")
-        return DataLoader(self.test_df.values, batch_size=self.batch_size, shuffle=False, drop_last=True)
+        return DataLoader(self, batch_size=self.batch_size, shuffle=False, drop_last=True)
