@@ -79,11 +79,16 @@ class TSFDataLoader(Dataset):
         self.n_feature = self.df.shape[-1]
         
     def __len__(self):
-        return len(self.df) - (self.seq_len + self.pred_len) + 1
+        dataset_length = len(self.df) - self.seq_len - self.pred_len
+        print(f"[DEBUG] Dataset Type: {self.dataset_type}, Dataset Length: {len(self.df)}, Computed Length: {dataset_length}")
+        return max(1, dataset_length)
     
     def __getitem__(self, idx):
-        if idx >= len(self.df) - self.seq_len - self.pred_len:
-            raise IndexError(f"Index {idx} out of range for dataset of size {len(self.df)}")
+        max_index = len(self.df) - self.seq_len - self.pred_len
+        if idx >= max_index:  # ✅ Prevent out-of-range indexing
+            raise IndexError(f"[ERROR] Index {idx} out of range for dataset of size {len(self.df)}")
+
+        print(f"[DEBUG] Fetching index: {idx} of {max_index}")  # ✅ Debug index range
 
         data = self.df.values
         inputs = data[idx:idx + self.seq_len, :]
